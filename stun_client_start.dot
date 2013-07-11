@@ -1,0 +1,52 @@
+digraph G {
+  rankdir=BT
+  node[shape=box]
+
+  subgraph cluster_1 {
+    label="mtransport";
+    mozNrIceCtxStartGathering[label="mozilla::NrIceCtx::StartGathering"];
+  }
+
+  subgraph cluster_2 {
+    label="nICEr"
+    subgraph cluster_2_ice {
+      label="ice"
+      nr_ice_initialize;
+      nr_ice_media_stream_initialize;
+      nr_ice_component_initialize;
+      nr_ice_candidate_initialize;
+      nr_ice_srvrflx_start_stun;
+      nr_ice_srvrflx_start_stun_timer_cb;
+      nr_ice_candidate_pair_restart_stun_nominated_cb;
+      nr_ice_candidate_pair_start;
+    }
+
+    subgraph cluster_2_stun {
+      label="stun"
+      nr_stun_client_start;
+      nr_stun_client_send_request;
+    }
+
+    nr_trun_stun_ctx_start;
+  }
+  
+  mozNrIceCtxStartGathering ->
+  nr_ice_initialize ->
+  nr_ice_media_stream_initialize ->
+  nr_ice_component_initialize ->
+  nr_ice_candidate_initialize ->
+  nr_ice_srvrflx_start_stun;
+  nr_ice_srvrflx_start_stun -> nr_ice_srvrflx_start_stun_timer_cb[style=dashed];
+  nr_ice_srvrflx_start_stun_timer_cb ->
+  nr_stun_client_start ->
+  nr_stun_client_send_request;
+
+  nr_ice_candidate_pair_start ->
+  nr_stun_client_start;
+
+  nr_ice_candidate_pair_restart_stun_nominated_cb ->
+  nr_stun_client_start;
+
+  nr_trun_stun_ctx_start ->
+  nr_stun_client_start;
+}
