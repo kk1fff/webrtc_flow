@@ -1,0 +1,10 @@
+digraph G {
+  node[shape=box]
+  "RTCPeerConnectionJSImpl.__Init"[style=filled,fillcolor=skyblue];
+  
+  "mozilla::dom::mozRTCPeerConnection::Constructor" ->
+  "RTCPeerConnectionJSImpl.__Init" ->
+  "sipcc::PeerConnectionImpl::Initialize" ->
+  "sipcc::PeerConnectionImpl::Initialize" ->
+  "sipcc::PeerConnectionMedia::Init"
+}

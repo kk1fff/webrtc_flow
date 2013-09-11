@@ -1,3 +1,28 @@
 digraph G {
-  mozNrIceCtxStartChecks -> nr_ice_peer_ctx_start_checks2
+  node[shape=box];
+  mozNrIceCtxStartChecks[label="mozilla::NrIceCtx::StartChecks"];
+  subgraph cluster_gsm {
+    label="gsm";
+    lsm_connected;
+    vcmStartIceChecks;
+  }
+
+  lsm_connected -> vcmStartIceChecks;
+
+  vcmStartIceChecks -> vcmStartIceChecks_m[style=dashed]
+
+  vcmStartIceChecks_m -> mozNrIceCtxStartChecks[style=dashed]
+
+  mozNrIceCtxStartChecks->
+  nr_ice_peer_ctx_start_checks2 ->
+  nr_ice_media_stream_start_checks ->
+  nr_ice_media_stream_check;
+
+  nr_ice_media_stream_check -> nr_ice_media_stream_check[style=dashed];
+
+  nr_ice_media_stream_check ->
+  nr_ice_candidate_pair_start ->
+  nr_stun_client_start ->
+  nr_stun_client_send_request ->
+  nr_socket_sendto;
 }
