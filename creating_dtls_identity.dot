@@ -1,0 +1,87 @@
+digraph G {
+  # Variables
+  node [shape=box,style=filled,fillcolor=cornsilk]
+  certificate;
+  serial;
+  subject_name;
+  validity;
+  certreq;
+  slot;
+  name;
+  notBefore;
+  notAfter;
+  spki;
+  pubkey;
+  rsaparams;
+  private_key;
+  arena;
+  innerDER;
+  signedCert;
+
+  # Relationship
+  node [fillcolor=palegreen1]
+
+  n1[label="CERT_CreateCertificate(serial, subject_name, validity, certreq)"];
+  n1 -> certificate;
+  serial -> n1;
+  subject_name -> n1;
+  validity -> n1;
+  certreq -> n1;
+
+  n2[label="PK11_GenerateRandomOnSlot(slot,\nreinterpret_cast<unsigned char *>(&serial), sizeof(serial))"];
+  n2 -> serial;
+  slot -> n2;
+
+  
+  "CERT_AsciiToName(subject_name_string.c_str())" -> subject_name;
+  name -> "CERT_AsciiToName(subject_name_string.c_str())";
+
+  n4[label="PK11_GenerateRandomOnSlot(slot,\nrandom_name, sizeof(random_name))"];
+  n4 -> name;
+  slot -> n4;
+
+  "CERT_CreateValidity(notBefore, notAfter)" -> validity;
+  notBefore -> "CERT_CreateValidity(notBefore, notAfter)";
+  notAfter -> "CERT_CreateValidity(notBefore, notAfter)";
+
+  "CERT_CreateCertificateRequest(subject_name, spki, nullptr)" -> certreq;
+  subject_name -> "CERT_CreateCertificateRequest(subject_name, spki, nullptr)";
+  spki -> "CERT_CreateCertificateRequest(subject_name, spki, nullptr)";
+
+  "SECKEY_CreateSubjectPublicKeyInfo(pubkey)" -> spki;
+  pubkey -> "SECKEY_CreateSubjectPublicKeyInfo(pubkey)";
+
+  n8[label="PK11_GenerateKeyPair(slot,\nCKM_RSA_PKCS_KEY_PAIR_GEN,\n&rsaparams, &pubkey, PR_FALSE, PR_TRUE, nullptr)"];
+  n8 -> pubkey;
+  n8 -> private_key;
+  rsaparams -> n8;
+
+  "PK11_GetInternalSlot()" -> slot;
+
+  n10[label="SEC_ASN1EncodeItem(arena,\n&innerDER, certificate,\nSEC_ASN1_GET(CERT_CertificateTemplate))"];
+  n10 -> innerDER;
+  arena -> n10;
+  certificate -> n10;
+
+  "certificate->arena" -> arena;
+  certificate -> "certificate->arena";
+
+  n12[label="SECOID_SetAlgorithmID(arena,\n&certificate->signature,\nSEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION, 0)"];
+  arena
+  -> n12
+  -> "certificate->signature"
+  -> certificate;
+
+  "SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len, private_key, SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION)"
+  -> signedCert
+  -> "certificate->derCert"
+  -> certificate;
+  arena -> "SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len, private_key, SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION)";
+  innerDER -> "SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len, private_key, SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION)";
+  private_key -> "SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len, private_key, SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION)";
+
+  # Result
+  node[fillcolor=black,style="rounded,filled",fontcolor="white"]
+  private_key -> "new DtlsIdentity(private_key.forget(), certificate.forget())";
+  certificate -> "new DtlsIdentity(private_key.forget(), certificate.forget())";
+}
